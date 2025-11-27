@@ -137,7 +137,7 @@ async def home():
                     <input type="number" step="0.1" id="GlucoseConcentration" value="148" required>
                 </div>
                 <div class="form-group">
-                    <label>혈압</label>
+                    <label>systolic 혈압</label>
                     <input type="number" step="0.1" id="BP" value="72" required>
                 </div>
                 <div class="form-group">
