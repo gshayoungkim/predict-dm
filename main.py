@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 import joblib
 import numpy as np
@@ -39,6 +40,172 @@ class PredictionResponse(BaseModel):
     probability: float  # 당뇨병 발생 확률
     risk_level: str  # 위험도
 
+
+@app.get("/", response_class=HTMLResponse)
+async def home():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>당뇨병 예측 시스템</title>
+        <meta charset="utf-8">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                max-width: 600px;
+                margin: 50px auto;
+                padding: 20px;
+                background: #f5f5f5;
+            }
+            .container {
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            h1 { color: #333; text-align: center; }
+            .form-group {
+                margin-bottom: 15px;
+            }
+            label {
+                display: block;
+                margin-bottom: 5px;
+                color: #666;
+                font-weight: bold;
+            }
+            input {
+                width: 100%;
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                box-sizing: border-box;
+            }
+            button {
+                width: 100%;
+                padding: 12px;
+                background: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 16px;
+                margin-top: 10px;
+            }
+            button:hover { background: #45a049; }
+            #result {
+                margin-top: 20px;
+                padding: 15px;
+                border-radius: 5px;
+                display: none;
+            }
+            .success { background: #d4edda; color: #155724; }
+            .warning { background: #fff3cd; color: #856404; }
+            .danger { background: #f8d7da; color: #721c24; }
+            .links {
+                text-align: center;
+                margin-top: 20px;
+            }
+            .links a {
+                color: #4CAF50;
+                text-decoration: none;
+                margin: 0 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🏥 당뇨병 예측 시스템</h1>
+            <form id="predictionForm">
+                <div class="form-group">
+                    <label>임신 횟수</label>
+                    <input type="number" id="nPregnancies" value="6" required>
+                </div>
+                <div class="form-group">
+                    <label>포도당 농도</label>
+                    <input type="number" step="0.1" id="GlucoseConcentration" value="148" required>
+                </div>
+                <div class="form-group">
+                    <label>혈압</label>
+                    <input type="number" step="0.1" id="BP" value="72" required>
+                </div>
+                <div class="form-group">
+                    <label>피부 두께</label>
+                    <input type="number" step="0.1" id="SkinThickness" value="35" required>
+                </div>
+                <div class="form-group">
+                    <label>인슐린</label>
+                    <input type="number" step="0.1" id="SerumInsulin" value="125" required>
+                </div>
+                <div class="form-group">
+                    <label>체질량지수 (BMI)</label>
+                    <input type="number" step="0.1" id="BMI" value="33.6" required>
+                </div>
+                <div class="form-group">
+                    <label>당뇨 가족력</label>
+                    <input type="number" step="0.001" id="DiabetesPedigreeFunction" value="0.627" required>
+                </div>
+                <div class="form-group">
+                    <label>나이</label>
+                    <input type="number" id="Age" value="50" required>
+                </div>
+                <button type="submit">예측하기</button>
+            </form>
+            
+            <div id="result"></div>
+            
+            <div class="links">
+                <a href="/docs" target="_blank">📚 API 문서</a>
+                <a href="/health" target="_blank">🏥 상태 확인</a>
+            </div>
+        </div>
+
+        <script>
+            document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const data = {
+                    nPregnancies: parseInt(document.getElementById('nPregnancies').value),
+                    GlucoseConcentration: parseFloat(document.getElementById('GlucoseConcentration').value),
+                    BP: parseFloat(document.getElementById('BP').value),
+                    SkinThickness: parseFloat(document.getElementById('SkinThickness').value),
+                    SerumInsulin: parseFloat(document.getElementById('SerumInsulin').value),
+                    BMI: parseFloat(document.getElementById('BMI').value),
+                    DiabetesPedigreeFunction: parseFloat(document.getElementById('DiabetesPedigreeFunction').value),
+                    Age: parseInt(document.getElementById('Age').value)
+                };
+                
+                try {
+                    const response = await fetch('/predict', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    const result = await response.json();
+                    const resultDiv = document.getElementById('result');
+                    
+                    let className = 'success';
+                    if (result.risk_level === '중간') className = 'warning';
+                    if (result.risk_level === '높음') className = 'danger';
+                    
+                    resultDiv.className = className;
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `
+                        <h3>예측 결과</h3>
+                        <p><strong>당뇨병 여부:</strong> ${result.prediction === 1 ? '있음' : '없음'}</p>
+                        <p><strong>발생 확률:</strong> ${(result.probability * 100).toFixed(2)}%</p>
+                        <p><strong>위험도:</strong> ${result.risk_level}</p>
+                    `;
+                } catch (error) {
+                    alert('예측 중 오류가 발생했습니다: ' + error);
+                }
+            });
+        </script>
+    </body>
+    </html>
+    """
+
+    
 # 헬스 체크
 @app.get("/health")
 async def health_check():
