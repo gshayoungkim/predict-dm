@@ -1,9 +1,9 @@
 services:
   - type: web
-    name: diabetes-prediction-api
+    name: predict-dm
     env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "uvicorn main:app --host 0.0.0.0 --port 10000"
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.10.0
+    region: singapore
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
+    # envVars의 PYTHON_VERSION 제거 또는 수정
