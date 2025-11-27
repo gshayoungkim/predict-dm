@@ -4,6 +4,8 @@ services:
     env: python
     region: singapore
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      pip install --upgrade pip
+      python train_model.py
+      pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
-    # envVars의 PYTHON_VERSION 제거 또는 수정
