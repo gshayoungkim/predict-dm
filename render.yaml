@@ -5,10 +5,13 @@ services:
     region: singapore
     plan: free
     buildCommand: |
-      pip install --upgrade pip setuptools wheel
-      pip install --only-binary=:all: numpy==1.26.2
-      pip install --only-binary=:all: pandas==2.1.4
-      pip install --only-binary=:all: scikit-learn==1.3.2
-      pip install fastapi==0.104.1 uvicorn[standard]==0.24.0 joblib==1.3.2 pydantic==2.5.0
+      echo "=== Python 버전 확인 ==="
+      python --version
+      echo "=== 패키지 설치 ==="
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      echo "=== 모델 학습 시작 ==="
       python train_model.py
+      echo "=== 생성된 파일 확인 ==="
+      ls -la *.pkl
     startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
