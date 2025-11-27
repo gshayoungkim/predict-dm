@@ -1,3 +1,4 @@
+# 바이너리 휠만 설치 (--only-binary 옵션)
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 scikit-learn==1.3.2
